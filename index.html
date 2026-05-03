@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Chat Analyzer</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<style>
+
+/* ===== GLOBAL ===== */
+body{
+  font-family: system-ui, -apple-system, sans-serif;
+  background: radial-gradient(circle at top, #1f1c2c, #0f2027);
+  color:white;
+  margin:0;
+}
+
+.container{
+  padding:30px;
+ max-width: 1300px;  /* or remove completely */
+  margin:auto;
+}
+
+/* ===== UPLOAD BOX ===== */
+.upload-box{
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(15px);
+  border:1px solid rgba(255,255,255,0.1);
+  padding:25px;
+  border-radius:18px;
+  text-align:center;
+  margin-bottom:30px;
+}
+
+button{
+  padding:10px 22px;
+  border-radius:25px;
+  border:none;
+  background: linear-gradient(135deg,#ff758c,#ff7eb3);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 5px 20px rgba(255,118,150,0.4);
+}
+
+/* ===== RELATION CARD ===== */
+.relationship-card{
+  background: linear-gradient(135deg,#ff758c,#ff7eb3);
+  padding:25px;
+  border-radius:20px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(255,0,100,0.3);
+}
+
+/* ===== SPEEDOMETER ===== */
+.speedometer{
+  width:280px;
+  margin:0 auto;
+}
+
+.gauge-svg{
+  width:100%;
+}
+
+.gauge-bg{
+  fill:none;
+  stroke:rgba(255,255,255,0.2);
+  stroke-width:14;
+}
+
+.gauge-progress{
+  fill:none;
+  stroke:url(#grad);
+  stroke-width:14;
+  stroke-linecap:round;
+}
+
+.needle{
+  stroke:white;
+  stroke-width:5;
+  transform-origin:100px 100px;
+}
+
+.gauge-value{
+  font-size:24px;
+  font-weight:bold;
+}
+
+/* ===== BEHAVIOR ===== */
+.behavior-board{
+  margin-top:25px;
+  padding:20px;
+  border-radius:18px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+}
+
+.bar{
+  height:10px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.2);
+  overflow:hidden;
+}
+
+.fill{
+  height:100%;
+  border-radius:10px;
+  background: linear-gradient(90deg,#ff4d4d,#ffa500,#00ff99);
+}
+
+/* ===== GRID ===== */
+.insights-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);  /* 🔥 FORCE 3 */
+  gap: 25px;
+  margin-top: 20px;
+}
+/* ===== USER CARD ===== */
+.user-card{
+  background-color: #0f2027;
+  box-sizing: border-box;
+    width: 100%;
+  min-width: 0;
+}
+@media(max-width: 900px){
+  .insights-grid{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media(max-width: 600px){
+  .insights-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+.user-card:hover{
+  transform: translateY(-6px);
+  box-shadow:0 10px 35px rgba(0,0,0,0.4);
+}
+
+/* ===== TEXT ===== */
+.msg-count{
+  font-size:13px;
+  opacity:0.7;
+}
+
+/* ===== TOP INFO ===== */
+.top-line{
+  padding:6px 10px;
+  border-radius:10px;
+  background: rgba(255,255,255,0.1);
+  font-size:13px;
+}
+
+.top-line span{
+  opacity:0.8;
+}
+
+/* ===== DIVIDER ===== */
+.divider{
+  height:1px;
+  background:rgba(255,255,255,0.15);
+}
+
+/* ===== TAGS ===== */
+.tag{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.15);
+}
+
+.tag-container{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+/* ===== EMOJIS ===== */
+.emoji-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+#timeChart{
+  max-height: 250px;
+  margin-top: 20px;
+}
+.emoji-box{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:15px;
+  background:rgba(255,255,255,0.12);
+}
+
+.emoji{
+  font-size:20px;
+}
+
+.emoji-count{
+  font-size:12px;
+  opacity:0.8;
+}
+/* ===== NEW CARD UI ===== */
+
+.stat-box{
+  margin:10px 0 15px;
+}
+
+.stat-number{
+  font-size:26px;
+  font-weight:bold;
+}
+
+.stat-label{
+  font-size:13px;
+  opacity:0.7;
+  margin-left:6px;
+}
+
+/* SECTION */
+.section{
+  margin-top:15px;
+}
+
+.section-title{
+  font-size:13px;
+  opacity:0.8;
+  margin-bottom:8px;
+}
+
+/* CHIPS */
+.chip-container{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.chip{
+  padding:6px 10px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.12);
+  font-size:13px;
+}
+
+.chip span{
+  opacity:0.7;
+  margin-left:4px;
+}
+
+.emoji-chip{
+  font-size:16px;
+}
+.section .bar{
+  height:6px;
+  margin-top:3px;
+}
+#replySection{
+  margin-top:25px;
+}
+
+.big-bar{
+  width:100%;
+  height:14px;
+  background:rgba(255,255,255,0.1);
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.big-fill{
+  height:100%;
+  background: linear-gradient(90deg,#ff4d4d,#ffaa00,#00ff99);
+  border-radius:10px;
+  transition:0.4s;
+}
+#replyChart{
+  margin-top: 25px;
+  max-height: 250px;
+}
+.reply-summary{
+  margin-top:20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.reply-item{
+  display:flex;
+  justify-content:space-between;
+  background:rgba(255,255,255,0.08);
+  padding:10px 15px;
+  border-radius:12px;
+  font-size:14px;
+}
+</style>
+
+
+
+</head>
+
+<body>
+
+<div class="container">
+
+
+<div class="upload-box">
+<input type="file" id="fileInput">
+<button onclick="handleUpload()">Analyze 🚀</button>
+  <div id="insights"></div>
+<canvas id="userChart"></canvas>
+<div style="height:250px;">
+  <canvas id="timeChart"></canvas>
+</div>
+<div id="activityInsights"></div>
+<canvas id="replyChart"></canvas>
+<div id="replySection"></div>
+<div id="ghostSection"></div>
+<div id="starterSection"></div>
+</div>
+
+
+<!-- Activity Insights -->
+
+
+
+</div>
+
+
+<script>
+
+let userChartInstance=null;
+
+function handleUpload(){
+  const file=document.getElementById("fileInput").files[0];
+  if(!file){alert("Select file");return;}
+  uploadAndAnalyse(file);
+}
+
+async function uploadAndAnalyse(file){
+
+  const formData=new FormData();
+  formData.append("file",file);
+
+  const res=await fetch("http://localhost:5000/analyse",{method:"POST",body:formData});
+  const data=await res.json();
+
+  let messages=data.data||data.messages||data;
+  messages = messages.filter(m => m && typeof m === "object");
+  
+  console.log("MESSAGES SAMPLE FULL:", JSON.stringify(messages.slice(0,5), null, 2));
+
+  if(!Array.isArray(messages)){
+    alert("Invalid data");return;
+  }
+
+  const rel=advancedRelationship(messages);
+  const behavior=analyzeBehavior(messages.map(m=>m.message||""));
+  const behaviorPercent=getPercent(behavior);
+  const stats=userStats(messages);
+  console.log("TOTAL messages:", messages.length);
+
+// 🔥 find broken message
+const broken = messages.find(m =>
+  !m ||
+  typeof m !== "object" ||
+  !m.date ||
+  !m.time ||
+  typeof m.time !== "string" ||
+  !m.time.includes(":") ||
+  typeof m.date !== "string" ||
+  !m.date.includes("/")
+);
+
+console.log("BROKEN MESSAGE:", broken);
+ const replyAvg = getReplySpeed(messages) || {};
+ console.log("replyAvg:", replyAvg);
+const replyScore = normalizeSpeed(replyAvg);
+createReplyChart(replyAvg);
+ const ghostData = getGhosting(messages);
+const starterData = getConversationStarters(messages);
+
+
+document.getElementById("ghostSection").innerHTML =
+  renderGhosting(ghostData);
+  document.getElementById("starterSection").innerHTML =
+  renderStarters(starterData);
+
+
+
+  updateCharts(messages);
+
+  let html = "";
+
+  /* ===== RELATIONSHIP ===== */
+  html += `
+  <div class="relationship-card">
+    <div class="speedometer">
+      <svg viewBox="0 0 200 120" class="gauge-svg">
+        <defs>
+          <linearGradient id="grad">
+            <stop offset="0%" stop-color="red"/>
+            <stop offset="50%" stop-color="orange"/>
+            <stop offset="100%" stop-color="lime"/>
+          </linearGradient>
+        </defs>
+
+        <path d="M20 100 A80 80 0 0 1 180 100" class="gauge-bg"/>
+        <path d="M20 100 A80 80 0 0 1 180 100"
+              class="gauge-progress"
+              style="stroke-dasharray:${rel.score * 2.51}, 251"/>
+        <line x1="100" y1="100" x2="100" y2="30"
+              class="needle" id="needle"/>
+        <circle cx="100" cy="100" r="6" fill="white"/>
+      </svg>
+      <div class="gauge-value">${rel.score}%</div>
+    </div>
+    <h2>${rel.status}</h2>
+<p style="opacity:0.8">${rel.score}% compatibility</p>
+  </div>
+  `;
+
+  /* ===== BEHAVIOR ===== */
+  html += `
+  <div class="behavior-board">
+    <h3>🧠 Behavior</h3>
+    ${Object.entries(behaviorPercent).map(([k,v])=>`
+      <div style="margin:10px 0;">
+        ${k} ${v}%
+        <div class="bar">
+          <div class="fill" style="width:${v}%"></div>
+        </div>
+      </div>
+    `).join("")}
+  </div>
+  `;
+
+  /* ===== USER GRID ===== */
+  html += `<div class="insights-grid">`;
+
+  Object.keys(stats).forEach(user => {
+
+    let u = stats[user];
+    const userBehavior = analyzeBehaviorUser(u.texts);
+    const tag = getPersonalityTag(userBehavior);
+
+html += `
+<div class="user-card">
+
+  <h3>${user}</h3>
+
+  <div class="chip">⭐ ${tag}</div>
+
+  <div class="stat-box">
+    <span class="stat-number">${u.messages}</span>
+    <span class="stat-label">Messages</span>
+  </div>
+
+  <!-- WORDS -->
+  <div class="section">
+    <div class="section-title">💬 Top Words</div>
+    <div class="chip-container">
+      ${getTopWordsWithCount(u.words,5).map(([w,c])=>
+        `<div class="chip">${w} ${c}</div>`
+      ).join("")}
+    </div>
+  </div>
+
+  <!-- EMOJIS -->
+  <div class="section">
+    <div class="section-title">😂 Top Emojis</div>
+    <div class="chip-container">
+      ${Object.entries(u.emojis)
+        .sort((a,b)=>b[1]-a[1])
+        .slice(0,5)
+        .map(([e,c])=>`<div class="chip">${e} ${c}</div>`)
+        .join("")}
+    </div>
+  </div>
+
+  <!-- BEHAVIOR -->
+  <div class="section">
+    <div class="section-title">🧠 Behavior</div>
+
+    ${Object.entries(userBehavior).map(([k,v])=>`
+      <div>${k} ${v}%</div>
+      <div class="bar">
+        <div class="fill" style="width:${v}%"></div>
+      </div>
+    `).join("")}
+
+  </div>
+
+</div>
+`;
+  });
+
+  html += `</div>`;
+
+  /* ===== FINAL RENDER (IMPORTANT) ===== */
+  document.getElementById("insights").innerHTML = html;
+  document.getElementById("replySection").innerHTML =
+  renderReplySpeed(replyAvg, replyScore);
+
+  /* ===== NEEDLE ===== */
+  setTimeout(()=>{
+    const needle=document.getElementById("needle");
+    if(!needle) return;
+    const angle=(rel.score*1.8)-90;
+    needle.style.transition="transform 1s ease";
+    needle.style.transform=`rotate(${angle}deg)`;
+  },200);
+}
+
+/* ===== FIXED USER STATS ===== */
+
+function userStats(messages){
+  const users={};
+
+  messages.forEach(m=>{
+  if(!m.user) return;
+    if(!users[m.user]){
+      users[m.user]={messages:0,words:{},emojis:{},texts:[]};
+    }
+    
+    let u=users[m.user];
+   const msg = m.message || m.text || "";
+u.texts.push(msg);
+    u.messages++;
+
+const cleanText = m.message
+  .toLowerCase()
+  .replace(/<media omitted>/gi, "")  // remove full phrase
+  .replace(/media omitted/gi, "")    // remove variant
+  .replace(/omitted/gi, "")          // safety remove
+  .replace(/[^\w\s]/g, "");          // remove symbols
+
+const words = cleanText.split(/\s+/);
+    words.forEach(w=>{
+      if(w.length>2){
+        u.words[w]=(u.words[w]||0)+1;
+      }
+    });
+    const stopWords = ["hai","the","and","for","you","this","that","are","was"];
+
+words.forEach(w=>{
+  if(w.length > 2 && !stopWords.includes(w)){
+    u.words[w] = (u.words[w] || 0) + 1;
+  }
+});
+
+    const emojis=[...m.message.matchAll(/\p{Extended_Pictographic}/gu)].map(e=>e[0]);
+
+    emojis.forEach(e=>{
+      u.emojis[e]=(u.emojis[e]||0)+1;
+    });
+  });
+
+  return users;
+}
+
+function getTopWordsWithCount(obj,n=5){
+  return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);
+}
+
+function getPercent(obj){
+  let total=Object.values(obj).reduce((a,b)=>a+b,0)||1;
+  let result={};
+  for(let k in obj){
+    result[k]=Math.round((obj[k]/total)*100);
+  }
+  return result;
+}
+
+function analyzeBehavior(messages){
+ let score={
+  happy:0,
+  sad:0,
+  angry:0,
+  sweet:0,
+  kind:0,
+  abusive:0,
+  "depressing/short":0
+};
+
+ messages.forEach(text=>{
+  if(!text) return;
+  text = text.toLowerCase().trim();
+
+  // ===== HAPPY =====
+  const happyMatches = text.match(/😂|🤣|😆|😜|😝|😀|😁|😉|😗|😙|😋|😛|😊|👀|🫢|👽|💀|haha|hehe|lol|lmao|mja|nice|wow|fun|yes/g);
+  if(happyMatches) score.happy += happyMatches.length;
+
+  // ===== SAD =====
+  const sadMatches = text.match(/😭|😢|😞|🙁|☹️|😕|sad|upset|cry|miss|hurt/g);
+  if(sadMatches) score.sad += sadMatches.length;
+
+  // ===== DEPRESSING / SHORT =====
+
+  // 1. Emojis + words
+  const depressingMatches = text.match(/😐|😔|😰|🥲|🫤|🤧|tired|alone|low|low text|low msg|no reply|dry chat|depressed|empty|nothing/g);
+  if(depressingMatches){
+    score["depressing/short"] += depressingMatches.length;
+  }
+
+  // 2. Short replies detection 🔥
+  const shortReplies = ["ok","k","hmm","hmmm","hm","kk","ya","yes","no","h","👍"];
+
+  if(text.length <= 3 || shortReplies.includes(text)){
+    score["depressing/short"] += 1;
+  }
+
+  // ===== OTHER =====
+  const angryMatches = text.match(/😡|🤨|😠|😤|😮‍💨|😒|🙄|😐|😑|🤐|🫡|angry|mad|annoy|irritate|frustrated/g);
+
+if(angryMatches){
+  score.angry += angryMatches.length;
+}
+  if(/love|❤️|luv|omg|miss|like|sex|hot|pyar/.test(text)) score.sweet++;
+  if(/thanks|sorry|pls|please/.test(text)) score.kind++;
+  if(/bc|mc|fuck|shit|abe/.test(text)) score.abusive++;
+
+});
+
+  return score;
+}
+
+function advancedRelationship(messages){
+
+  const users = [...new Set(messages.map(m=>m.user))];
+
+  // Only for 2 users
+ if(users.length !== 2){
+
+  let activityScore = messages.length;
+
+  // simple scaling
+  let score = Math.min(100, Math.round(activityScore / 5));
+
+  return {
+    status: "🤝 Chat Bond",
+    score: score
+  };
+}
+
+  let score = {
+    love:0,
+    fun:0,
+    emotional:0
+  };
+
+  messages.forEach(m=>{
+    const text = (m.message || m.text || "").toLowerCase();
+
+    // ===== 💖 ROMANTIC =====
+    const romanticMatches = text.match(/love|luv|baby|jaan|miss you|i like you|🥰|🥵|😍|🤩|👄|❤️|🩷|🧡|💛|💚|💙|🩵|💜|🖤|🩶|🤍|🤎|❤️‍🔥|❤️‍🩹|❣️|💕|💞|💓|💗|💖|💘|💝/g);
+    if(romanticMatches){
+      score.love += romanticMatches.length;
+    }
+
+    // ===== 😂 FRIENDS / FUN =====
+    const funMatches = text.match(/😃|😄|😁|😆|😅|😂|🤣|🥲|🥹|☺️|😊|😇|🙂|🙃|😉|😌|lol|lmao|haha|hehe|fun|masti|bro|bhai/g);
+    if(funMatches){
+      score.fun += funMatches.length;
+    }
+
+    // ===== 😭 EMOTIONAL =====
+    const emotionalMatches = text.match(/🤧|😭|😢|😞|😔|😟|😣|😖|😫|😩|😓|😱|sad|cry|hurt|miss|alone|tired|depressed|pain|stress/g);
+    if(emotionalMatches){
+      score.emotional += emotionalMatches.length;
+    }
+
+  });
+
+  // ===== 🎯 SCORE CALCULATION =====
+  let finalScore = 0;
+
+  finalScore += score.fun * 2;
+  finalScore += score.love * 4;
+  finalScore += score.emotional * 3;
+
+  finalScore = Math.min(100, Math.round(finalScore / 5));
+
+  // ===== 🎭 RELATION TYPE =====
+  let status = "🤝 Friends";
+
+  if(score.love > 25){
+    status = "💖 Lover";
+  }
+  else if(score.love > 10){
+    status = "💕 Romantic";
+  }
+  else if(score.fun > score.emotional){
+    status = "😂 Best Friends";
+  }
+
+  return {
+    status,
+    score: finalScore
+  };
+}
+function getActivityInsights(activity){
+  let html = "";
+
+  Object.keys(activity).forEach(user=>{
+    const hours = activity[user];
+    const max = Math.max(...hours);
+    const peak = hours.indexOf(max);
+
+    const label = [
+      "12AM","1AM","2AM","3AM","4AM","5AM",
+      "6AM","7AM","8AM","9AM","10AM","11AM",
+      "12PM","1PM","2PM","3PM","4PM","5PM",
+      "6PM","7PM","8PM","9PM","10PM","11PM"
+    ];
+
+    let type = "☀️ Day User";
+    if(peak >= 22 || peak <= 4) type = "🌙 Night Owl";
+
+    html += `
+      <div class="insight">
+        <b>${user}</b> is most active at 
+        ${label[peak]} (${max} msgs) — ${type}
+      </div>
+    `;
+  });
+
+  return html;
+}
+function getTime(m){
+  if(!m.date || !m.time) return 0;
+
+  let [time, modifier] = m.time.split(" ");
+  let [h, min] = time.split(":");
+
+  h = parseInt(h);
+  min = parseInt(min);
+
+  if(modifier){
+    if(modifier.toLowerCase() === "pm" && h !== 12) h += 12;
+    if(modifier.toLowerCase() === "am" && h === 12) h = 0;
+  }
+
+  let [d, mo, y] = m.date.split("/");
+
+  // fix year like 26 → 2026
+  if(y.length === 2) y = "20" + y;
+
+  return new Date(y, mo - 1, d, h, min).getTime();
+}
+
+function getReplySpeed(messages){
+  const replyTimes = {};
+
+  messages.sort((a,b)=>getTime(a) - getTime(b));
+
+  for(let i = 1; i < messages.length; i++){
+    const prev = messages[i-1];
+    const curr = messages[i];
+
+    // only when user switches
+    if(prev.user !== curr.user){
+
+      const t1 = getTime(prev);
+      const t2 = getTime(curr);
+
+      const diff = (t2 - t1) / 1000;
+
+      // ✅ ONLY count real replies (within 30 min)
+      if(diff > 0 && diff < 3600){
+
+        if(!replyTimes[curr.user]){
+          replyTimes[curr.user] = [];
+        }
+
+        replyTimes[curr.user].push(diff);
+      }
+    }
+  }
+
+  const avg = {};
+
+  Object.keys(replyTimes).forEach(user=>{
+    const arr = replyTimes[user];
+    const sum = arr.reduce((a,b)=>a+b,0);
+    avg[user] = sum / arr.length;
+  });
+
+  return avg;
+}
+function getReplySpeedPairs(messages){
+
+  const pairs = {};
+
+  messages.sort((a,b)=>new Date(a.date) - new Date(b.date));
+
+  for(let i = 1; i < messages.length; i++){
+    const prev = messages[i-1];
+    const curr = messages[i];
+
+    if(prev.user !== curr.user){
+
+      // 🔥 find START of previous user's block
+      let j = i - 1;
+
+      while(j > 0 && messages[j-1].user === prev.user){
+        j--;
+      }
+
+      const firstPrev = messages[j];
+
+      const t1 = getTime(firstPrev);
+const t2 = getTime(curr);
+      const diff = (t2 - t1) / 1000;
+
+     if(diff > 1){ // 12 HOURS
+
+        const key = `${prev.user} → ${curr.user}`;
+
+        if(!pairs[key]){
+          pairs[key] = [];
+        }
+
+        pairs[key].push(diff);
+      }
+    }
+  }
+
+  const avg = {};
+
+  Object.keys(pairs).forEach(k=>{
+    const arr = pairs[k];
+    const sum = arr.reduce((a,b)=>a+b,0);
+    avg[k] = sum / arr.length;
+  });
+
+  return avg;
+}
+function formatTime(sec){
+  if(sec < 60) return `${Math.round(sec)} sec`;
+  if(sec < 3600) return `${Math.round(sec/60)} min`;
+  if(sec < 86400) return `${Math.round(sec/3600)} hr`;
+  return `${Math.round(sec/86400)} days`;
+}
+function renderPairReply(pairs){
+
+  const sorted = Object.entries(pairs)
+    .sort((a,b)=>a[1]-b[1]); // fastest first
+
+  let html = `
+    <div class="section">
+      <div class="section-title">🔁 Reply Relationships</div>
+  `;
+
+  sorted.forEach(([pair,time])=>{
+    html += `
+      <div class="reply-item">
+        <span>${pair}</span>
+        <span>${formatTime(time)}</span>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  return html;
+}
+
+function renderReplySpeed(replyAvg, replyScore){
+  let html = `<div class="section">
+    <div class="section-title">⚡ Reply Speed</div>
+  `;
+
+  const users = Object.keys(replyScore)
+    .sort((a,b)=>replyScore[b]-replyScore[a]);
+
+  users.forEach(user=>{
+    html += `
+      <div style="margin-top:10px;">
+        <div style="display:flex; justify-content:space-between;">
+          <span>${user}</span>
+          <span>${formatTime(replyAvg[user] || 0)}</span>
+        </div>
+
+        <div class="big-bar">
+          <div class="big-fill" style="width:${replyScore[user]}%"></div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  return html;
+}
+function createReplyChart(replyAvg){
+
+  const users = Object.keys(replyAvg);
+  const values = users.map(u => Math.round(replyAvg[u]));
+  if(Object.keys(replyAvg).length === 0){
+  console.log("No reply data");
+  return;
+}
+
+  // destroy old chart if exists
+  if(window.replyChartInstance){
+    window.replyChartInstance.destroy();
+  }
+
+  window.replyChartInstance = new Chart(
+    document.getElementById("replyChart"),
+    {
+      type: "bar",
+      data: {
+        labels: users,
+        datasets: [{
+          label: "Reply Time (sec)",
+          data: values
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: "Seconds (lower = faster)"
+            }
+          }
+        }
+      }
+    }
+  );
+}
+function getGhosting(messages){
+  const ghost = {};
+
+  messages.sort((a,b)=>getTime(a) - getTime(b));
+
+  for(let i = 1; i < messages.length; i++){
+    const prev = messages[i-1];
+    const curr = messages[i];
+
+    if(prev.user !== curr.user){
+
+      const t1 = getTime(prev);
+      const t2 = getTime(curr);
+      const diff = (t2 - t1) / 1000;
+
+      // ❗ if reply takes too long → ghosting
+      if(diff > 3600){ // 1 hour+
+
+        if(!ghost[curr.user]){
+          ghost[curr.user] = 0;
+        }
+
+        ghost[curr.user]++;
+      }
+    }
+  }
+
+  return ghost;
+}
+function updateCharts(messages){
+  const count={};
+  messages.forEach(m=>count[m.user]=(count[m.user]||0)+1);
+
+  if(userChartInstance) userChartInstance.destroy();
+
+  userChartInstance=new Chart(document.getElementById("userChart"),{
+    type:"bar",
+    data:{
+      labels:Object.keys(count),
+      datasets:[{label:"Messages",data:Object.values(count)}]
+    }
+  });
+  // ===== TIME ACTIVITY GRAPH =====
+
+const activity = getActivityByHour(messages);
+document.getElementById("activityInsights").innerHTML =
+  getActivityInsights(activity);
+
+const datasets = Object.keys(activity).map(user => ({
+  label: user,
+  data: activity[user],
+  fill: false,
+  tension: 0.3
+}));
+
+// prevent duplicate chart
+if(window.timeChartInstance){
+  window.timeChartInstance.destroy();
+}
+window.timeChartInstance = new Chart(document.getElementById("timeChart"), {
+  type: "line",
+  data: {
+    labels: [
+      "12AM","1AM","2AM","3AM","4AM","5AM",
+      "6AM","7AM","8AM","9AM","10AM","11AM",
+      "12PM","1PM","2PM","3PM","4PM","5PM",
+      "6PM","7PM","8PM","9PM","10PM","11PM"
+    ],
+    datasets: datasets
+  },
+options: {
+  responsive: true,
+  maintainAspectRatio: false, // ✅ important
+  plugins: {
+    legend: { display: true }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        stepSize: 5
+      }
+    }
+  }
+}
+});
+}
+
+function analyzeBehaviorUser(messages){
+ let score={
+  happy:0,
+  sad:0,
+  angry:0,
+  sweet:0,
+  kind:0,
+  abusive:0,
+  "drytexter":0,
+  "interesting":0
+};
+
+ messages.forEach(text=>{
+  if(!text) return;
+  text = text.toLowerCase().trim();
+
+  // ===== HAPPY =====
+  const happyMatches = text.match(/😂|🤣|😆|😜|😝|😀|😁|😉|😗|😙|😋|😛|😊|👀|🫢|👽|💀|haha|hehe|lol|lmao|mja|nice|wow|fun|yes/g);
+  if(happyMatches) score.happy += happyMatches.length;
+
+  // ===== SAD =====
+  const sadMatches = text.match(/😭|😢|😞|🙁|☹️|😕|sad|upset|cry|miss|hurt/g);
+  if(sadMatches) score.sad += sadMatches.length;
+
+  // ===== DRY TEXTER =====
+
+  // 1. Emojis + words
+  const dryTexterMatches = text.match(/😐|😔|😰|🥲|🫤|🤧|tired|alone|low|low text|low msg|no reply|dry chat|depressed|empty|nothing/g);
+  if(dryTexterMatches){
+    score["drytexter"] += dryTexterMatches.length;
+  }
+
+  // 2. Short replies detection 🔥
+  const shortReplies = ["ok","k","hmm","hmmm","hm","kk","ya","yes","no","h","👍"];
+
+  if(text.length <= 3 || shortReplies.includes(text)){
+    score["drytexter"] += 1;
+  }
+  // short but many messages (spam typing)
+if(text.length < 10) score["drytexter"] += 1;
+ // ===== INTERESTING =====
+// ===== INTERESTING (LONG / DETAILED TEXTER) =====
+if(text.length > 60) score.interesting += 2; // long message
+
+if(text.split(" ").length > 12) score.interesting += 2; // many words
+
+if(text.includes("\n")) score.interesting += 2; // multi-line
+
+// bonus for detailed typing
+if(text.length > 120) score.interesting += 3;
+  // ===== OTHER =====
+  const angryMatches = text.match(/😡|🤨|😠|😤|😮‍💨|😒|🙄|😐|😑|🤐|🫡|angry|mad|annoy|irritate|frustrated/g);
+
+if(angryMatches){
+  score.angry += angryMatches.length;
+}
+  if(/love|❤️|luv|omg|miss|like|sex|hot|pyar/.test(text)) score.sweet++;
+  if(/thanks|sorry|pls|please/.test(text)) score.kind++;
+const abusiveWords = [
+  "bc","mc","madarchod","bhenchod",
+  "lavda","lund","chutiya","chu","gaand",
+  "gandu","bsdk","harami","kutte",
+  "fuck","shit","bitch","asshole"
+];
+const abusiveEmojis = [
+  "😠","😡","🤬","💀","👿","😤","🖕"
+];
+const msg = text.toLowerCase();
+
+// words
+const words = text.split(/\s+/);
+
+if(abusiveWords.some(w => words.includes(w))){
+  score.abusive++;
+}
+
+if(abusiveEmojis.some(e => text.includes(e))){
+  score.abusive++;
+}
+});
+
+
+  return getPercent(score);
+}
+
+function getActivityByHour(messages){
+  const result = {};
+
+  messages.forEach(m=>{
+    if(!m.user) return;
+
+    let hour = 0;
+
+    // ✅ USE TIME FIELD DIRECTLY (NO Date parsing)
+    if(m.time){
+      let [time, modifier] = m.time.split(" ");
+      let [h, min] = time.split(":");
+
+      h = parseInt(h);
+
+      if(modifier){
+        if(modifier.toLowerCase() === "pm" && h !== 12) h += 12;
+        if(modifier.toLowerCase() === "am" && h === 12) h = 0;
+      }
+
+      hour = h;
+    }
+
+    if(!result[m.user]){
+      result[m.user] = new Array(24).fill(0);
+    }
+
+    result[m.user][hour]++;
+  });
+
+  return result;
+}
+function getPersonalityTag(b){
+  if(b.happy > 40) return "😂 Fun Person";
+  if(b.interesting > 30) return "🧠 Interesting Mind";
+  if(b["drytexter"] > 40) return "🥱 Dry Texter";
+  if(b.angry > 30) return "😡 Aggressive";
+  if(b.sweet > 30) return "💖 Sweet Talker";
+  return "🙂 Balanced";
+}
+function getTopInteresting(stats){
+  let maxUser = "";
+  let maxVal = 0;
+
+  Object.keys(stats).forEach(user=>{
+    const b = analyzeBehaviorUser(stats[user].texts);
+    if(b.interesting > maxVal){
+      maxVal = b.interesting;
+      maxUser = user;
+    }
+  });
+
+  return maxUser;
+}
+function normalizeSpeed(avg){
+  const values = Object.values(avg);
+
+  // ✅ FIX: handle empty case
+  if(values.length === 0){
+    return {};
+  }
+
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+
+  const result = {};
+
+  Object.keys(avg).forEach(user=>{
+    result[user] = max === min 
+      ? 1 
+      : 1 - ((avg[user] - min) / (max - min));
+  });
+
+  return result;
+}
+function renderGhosting(ghost){
+  let html = `
+    <div class="section">
+      <div class="section-title">👻 Ghosting</div>
+  `;
+
+  Object.keys(ghost).forEach(user=>{
+    const count = ghost[user];
+
+    const label =
+      count === 0 ? "😇 Never ignores" :
+      count < 3 ? "🙂 Rarely" :
+      count < 6 ? "😐 Sometimes" :
+      "😈 Ghoster";
+
+    html += `
+      <div class="reply-item">
+        <span>${user}</span>
+        <span>${count} ignores • ${label}</span>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  return html;
+}
+function getConversationStarters(messages){
+  const starters = {};
+
+  messages.sort((a,b)=>getTime(a) - getTime(b));
+
+  let lastTime = 0;
+  let lastUser = null;
+
+  for(let i = 0; i < messages.length; i++){
+    const curr = messages[i];
+    const t = getTime(curr);
+
+    // first message
+    if(i === 0){
+      starters[curr.user] = (starters[curr.user] || 0) + 1;
+      lastTime = t;
+      lastUser = curr.user;
+      continue;
+    }
+
+    const diff = (t - lastTime) / 1000;
+
+    // 🔥 NEW CONVERSATION if gap > 1 hour
+    if(diff > 3600){
+
+      starters[curr.user] = (starters[curr.user] || 0) + 1;
+    }
+
+    lastTime = t;
+    lastUser = curr.user;
+  }
+
+  return starters;
+}
+function renderStarters(data){
+  let html = `
+    <div class="section">
+      <div class="section-title">🧠 Conversation Starter</div>
+  `;
+
+  const sorted = Object.entries(data)
+    .sort((a,b)=>b[1]-a[1]);
+
+  sorted.forEach(([user,count],i)=>{
+
+    const label =
+      i === 0 ? "👑 Leader" :
+      count > 2 ? "🙂 Active" :
+      "😶 Quiet";
+
+    html += `
+      <div class="reply-item">
+        <span>${user}</span>
+        <span>${count} starts • ${label}</span>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  return html;
+}
+</script>
+</body>
+</html>
