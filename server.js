@@ -1,3 +1,5 @@
+require("dotenv").config();
+console.log(process.env.MONGO_URI);
 const mongoose =
   require("mongoose");
 
@@ -380,10 +382,14 @@ app.post("/analyse", upload.single("file"), (req, res) => {
       users: [...new Set(parsed.map((m) => m.user))],
       data: parsed,
     });
-  } catch (err) {
-    console.error("/analyse error:", err);
-    return res.status(500).json({ error: "Server error" });
-  }
+  } catch(err){
+
+  console.log(err);
+
+  res.status(500).json({
+    error: err.message
+  });
+}
 });
 
 app.get("/stats", (req, res) => {
@@ -420,9 +426,9 @@ app.post("/share-report", async (req,res)=>{
 
     console.log(err);
 
-    res.status(500).json({
-      error:"Failed to save"
-    });
+   res.status(500).json({
+  error: err.message
+});
   }
 
 });

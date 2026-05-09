@@ -486,7 +486,7 @@ startLoading();
   body: formData
 })
  const data = await res.json();
-
+console.log(data);
 console.log("BACKEND RESPONSE:", data);
 
 if(data.error){
@@ -3237,7 +3237,10 @@ async function generateShareLink(){
 
   const data = await res.json();
 
-  console.log(data);
+console.log(
+  "SHARE RESPONSE:",
+  data
+);
 
   try{
 
