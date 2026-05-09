@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 
 <html>
-<head></head>>
+<head>
+  
+</head>>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
 <title>Chat Analyzer</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 <style>
 /* ===== GLOBAL ===== */
 body{
@@ -212,6 +215,10 @@ canvas{
   color:#777;
   word-break:break-word;
 }
+/* ===== MODERN OVAL UI ===== */
+
+
+
 </style>
 </head>
 
@@ -248,7 +255,20 @@ canvas{
   </button>
 
 </div>
+<div style="
+  display:flex;
+  justify-content:center;
+  margin-top:14px;
+">
 
+  <button
+    class="share-btn"
+    onclick="generateShareLink()"
+  >
+    🔗 Share Analysis
+  </button>
+
+</div>
 <div id="fileName" class="file-name">
   No file selected
 </div>
@@ -317,6 +337,41 @@ button:active,
 .user-card:active,
 .relationship-card:active{
   transform: scale(0.97);
+}
+.share-btn{
+
+  background:
+    linear-gradient(
+      135deg,
+      #7a5cff,
+      #9d4dff
+    );
+
+  color:white;
+
+  border:none;
+
+  padding:13px 24px;
+
+  border-radius:999px;
+
+  font-weight:700;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 0 18px rgba(122,92,255,0.55);
+}
+.guide-container img{
+
+  border-radius:24px;
+
+  overflow:hidden;
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.12);
+
+  margin-bottom:14px;
 }
 </style>
   
@@ -3152,6 +3207,90 @@ function renderMonthlySummary(messages){
     </p>
   `;
 }
+async function generateShareLink(){
+
+  const reportData = {
+
+    insights:
+      document.getElementById(
+        "insights"
+      ).innerHTML,
+
+    details:
+      document.getElementById(
+        "detailsSection"
+      ).innerHTML
+  };
+
+  const res = await fetch(
+    "http://localhost:5000/share-report",
+    {
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body:JSON.stringify(
+        reportData
+      )
+    }
+  );
+
+  const data =
+    await res.json();
+
+  await navigator.clipboard.writeText(
+    data.shareUrl
+  );
+
+  alert("Share link copied!");
+}
+window.addEventListener(
+  "load",
+  async ()=>{
+
+    const id =
+      new URLSearchParams(
+        location.search
+      ).get("report");
+
+    if(!id) return;
+
+    const res =
+      await fetch(
+        `http://localhost:5000/report/${id}`
+      );
+
+    const data =
+      await res.json();
+
+    document.getElementById(
+      "insights"
+    ).innerHTML =
+      data.insights || "";
+
+    document.getElementById(
+      "detailsSection"
+    ).innerHTML =
+      data.details || "";
+
+    document.getElementById(
+      "detailsSection"
+    ).style.display =
+      "block";
+
+    document.getElementById(
+      "showInsightsBtn"
+    ).innerHTML =
+      "⬆ Hide Insights";
+  }
+);
+
+/* LOAD SHARED ANALYSIS */
+
+
 </script>
   </div>
 </div>

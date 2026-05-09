@@ -1,10 +1,42 @@
+const mongoose =
+  require("mongoose");
+
+mongoose.connect(
+  process.env.MONGO_URI
+)
+.then(()=>{
+
+  console.log("MongoDB Connected");
+
+})
+.catch(err=>{
+
+  console.log(err);
+
+});
+const reportSchema =
+  new mongoose.Schema({
+
+    insights:String,
+
+    details:String
+
+  });
+
+const Report =
+  mongoose.model(
+    "Report",
+    reportSchema
+  );
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
 const cheerio = require("cheerio");
 
 const app = express();
-
+app.use(express.json({
+  limit:"10mb"
+}));
 app.use(
   cors({
     origin: "*",
@@ -361,6 +393,68 @@ app.get("/stats", (req, res) => {
   });
 
   res.json({ totalMessages: chats.length, userCount });
+});
+app.post("/share-report", async (req,res)=>{
+
+  try{
+
+    const report =
+      await Report.create({
+
+  insights:req.body.insights,
+
+  details:req.body.details
+
+});
+
+    res.json({
+
+      success:true,
+
+     shareUrl:
+`https://chat-analyser-ai.netlify.app/?report=${report._id}`
+
+    });
+
+  }catch(err){
+
+    console.log(err);
+
+    res.status(500).json({
+      error:"Failed to save"
+    });
+  }
+
+});
+
+
+app.get("/report/:id", async (req,res)=>{
+
+  try{
+
+    const report =
+      await Report.findById(
+        req.params.id
+      );
+
+    if(!report){
+
+      return res.status(404).json({
+        error:"Report not found"
+      });
+    }
+
+    res.json(report);
+
+  }catch(err){
+
+    console.log(err);
+
+    res.status(500).json({
+      error:"Server error"
+    });
+  }
+
 });
 
 const PORT = process.env.PORT || 5000;
