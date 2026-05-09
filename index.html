@@ -3219,7 +3219,8 @@ async function generateShareLink(){
     details:
       document.getElementById(
         "detailsSection"
-      ).innerHTML
+      ).innerHTML,
+      messages:messages
   };
 
   const res = await fetch(
@@ -3295,6 +3296,20 @@ window.addEventListener(
       "showInsightsBtn"
     ).innerHTML =
       "⬆ Hide Insights";
+      if(data.messages){
+
+  updateCharts(data.messages);
+
+  createMonthlyChart(
+    data.messages
+  );
+
+  createReplyChart(
+    getReplySpeed(
+      data.messages
+    )
+  );
+}
   }
 );
 /* LOAD SHARED ANALYSIS */
