@@ -481,7 +481,7 @@ startLoading();
   const formData=new FormData();
   formData.append("file",file);
 
-  const res=await  fetch("http://localhost:5000/analyse", {
+  const res=await  fetch("https://chat-analyser-ai-1.onrender.com/analyse", {
   method: "POST",
   body: formData
 })
@@ -3223,29 +3223,37 @@ async function generateShareLink(){
   };
 
   const res = await fetch(
-    "http://localhost:5000/share-report",
+    "https://chat-analyser-ai-1.onrender.com/share-report",
     {
-
       method:"POST",
 
       headers:{
         "Content-Type":"application/json"
       },
 
-      body:JSON.stringify(
-        reportData
-      )
+      body:JSON.stringify(reportData)
     }
   );
 
-  const data =
-    await res.json();
+  const data = await res.json();
 
-  await navigator.clipboard.writeText(
-    data.shareUrl
-  );
+  console.log(data);
 
-  alert("Share link copied!");
+  try{
+
+    await navigator.clipboard.writeText(
+      data.shareUrl
+    );
+
+    alert("Share link copied!");
+
+  }catch{
+
+    prompt(
+      "Copy your share link:",
+      data.shareUrl
+    );
+  }
 }
 window.addEventListener(
   "load",
@@ -3260,7 +3268,7 @@ window.addEventListener(
 
     const res =
       await fetch(
-        `http://localhost:5000/report/${id}`
+        `https://chat-analyser-ai-1.onrender.com/report/${id}`
       );
 
     const data =
@@ -3278,8 +3286,7 @@ window.addEventListener(
 
     document.getElementById(
       "detailsSection"
-    ).style.display =
-      "block";
+    ).style.display = "block";
 
     document.getElementById(
       "showInsightsBtn"
@@ -3287,7 +3294,6 @@ window.addEventListener(
       "⬆ Hide Insights";
   }
 );
-
 /* LOAD SHARED ANALYSIS */
 
 
