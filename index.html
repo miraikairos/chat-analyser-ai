@@ -426,7 +426,7 @@ startLoading();
   const formData=new FormData();
   formData.append("file",file);
 
-  const res=await fetch("http://localhost:5000/analyse", {
+  const res=await  fetch("http://localhost:5000/analyse", {
   method: "POST",
   body: formData
 })

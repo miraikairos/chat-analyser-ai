@@ -66,12 +66,13 @@ function normalizeTimeAndDate(date, time) {
 ========================= */
 function parseWhatsApp(text) {
   const lines = String(text).split("\n");
-  const regex =
-    /^(\d{1,2}\/\d{1,2}\/\d{2,4}),?\s(\d{1,2}):(\d{2})(?:\s?([APMapm]{2}))?\s-\s([^:]+):\s(.+)$/;
-
+const regex =
+/^\[?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s(\d{1,2}):(\d{2})(?::\d{2})?\s?([APMapm]{2})?\]?\s([^:]+):\s([\s\S]+)$/;
   return lines
     .map((line) => {
       const match = line.match(regex);
+      console.log("LINE:", line);
+console.log("MATCH:", match);
       if (!match) return null;
 
       let date = match[1].trim();
@@ -295,7 +296,7 @@ function detectAndParse(content, filenameLower) {
   }
 
   // Plain text (WhatsApp)
-  if (filenameLower.endsWith(".txt") || true) {
+  if (filenameLower.endsWith(".txt")) {
     const whatsapp = parseWhatsApp(content);
     if (whatsapp.length) return whatsapp;
     return [];
