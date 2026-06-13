@@ -116,6 +116,19 @@ console.log("MATCH:", match);
       let modifier = match[4];
       let user = match[5]?.trim();
       let message = match[6]?.trim();
+      const parts = date.split("/");
+
+if (parts.length === 3) {
+  const month = parts[0];
+  const day = parts[1];
+  let year = parts[2];
+
+  if (year.length === 2) {
+    year = "20" + year;
+  }
+
+  date = `${day}/${month}/${year}`;
+}
 
       if (!date || !user || !message) return null;
 
