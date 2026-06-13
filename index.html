@@ -394,34 +394,31 @@ button:active,
 <!-- HIDDEN INSIGHTS -->
 <div id="detailsSection" style="display:none; margin-top:15px;">
 
-  <canvas id="userChart"></canvas>
-<div style="height:280px; width:100%; display:flex; justify-content:center;">
-  <canvas id="monthlyChatChart"></canvas>
-</div>
-<div id="monthlySummary" style="
-  margin-top:15px;
-  padding:14px;
-  border-radius:16px;
-  background:#f7f7ff;
-  box-shadow:0 6px 18px rgba(0,0,0,0.06);
-  font-size:14px;
-  color:#333;
-"></div>
-  <div style="height:250px; margin-top:20px;">
+  <div style="height:300px;">
+    <canvas id="userChart"></canvas>
+  </div>
+
+  <div style="height:300px; margin-top:20px;">
+    <canvas id="monthlyChatChart"></canvas>
+  </div>
+
+  <div id="monthlySummary"></div>
+
+  <div style="height:300px; margin-top:20px;">
     <canvas id="timeChart"></canvas>
   </div>
 
   <div id="activityInsights"></div>
 
-  <div style="margin-top:20px;">
+  <div style="height:300px; margin-top:20px;">
     <canvas id="replyChart"></canvas>
   </div>
-    <div id="flirtSection"></div>
+
+  <div id="flirtSection"></div>
   <div id="replySection"></div>
   <div id="ghostSection"></div>
   <div id="starterSection"></div>
   <div id="careSection"></div>
-
 
 </div>
 
@@ -434,6 +431,7 @@ button:active,
 <div id="insights"></div>
 
 <script>
+  let globalMessages = [];
 function startLoading(){
   document.getElementById("loading").style.display = "block";
 }
@@ -506,7 +504,7 @@ if(!Array.isArray(messages)){
 messages = messages.filter(
   m => m && typeof m === "object"
 );
-  
+  globalMessages = messages;
   console.log("MESSAGES SAMPLE FULL:", JSON.stringify(messages.slice(0,5), null, 2));
 
   if(!Array.isArray(messages)){
@@ -736,6 +734,67 @@ if(needle){
 
   }, 200);
 }
+// Wait for Chart.js canvases to finish rendering before snapshotting.
+// This prevents blank charts in the stored/shared report.
+async function ensureChartsReadyAndSnapshotIntoDetails(){
+  const chartIds = [
+    "userChart",
+    "monthlyChatChart",
+    "timeChart",
+    "replyChart"
+  ];
+
+  const start = Date.now();
+  const timeoutMs = 3000;
+
+  function canvasLooksRendered(canvas){
+    try{
+      const dataUrl = canvas.toDataURL("image/png");
+      return !!dataUrl && dataUrl.length >= 5000;
+    }catch{
+      return false;
+    }
+  }
+
+  while(Date.now() - start < timeoutMs){
+    let any = false;
+    let allOk = true;
+
+    for(const id of chartIds){
+      const c = document.getElementById(id);
+      if(!c) continue;
+      any = true;
+      if(!canvasLooksRendered(c)) allOk = false;
+    }
+
+    if(any && allOk) break;
+    await new Promise(r=>setTimeout(r, 100));
+  }
+
+  for(const id of chartIds){
+    const canvas = document.getElementById(id);
+    if(!canvas) continue;
+
+    try{
+      const img = canvas.toDataURL("image/png");
+      document.getElementById("detailsSection").innerHTML += `
+        <img
+          src="${img}"
+          style="
+            width:100%;
+            border-radius:18px;
+            margin-top:20px;
+          "
+        >
+      `;
+    }catch(e){
+      // best effort
+      console.log(e);
+    }
+  }
+}
+
+ensureChartsReadyAndSnapshotIntoDetails();
 }
 
 /* ===== FIXED USER STATS ===== */
@@ -1021,7 +1080,7 @@ function getTime(m){
     if(modifier.toLowerCase() === "am" && h === 12) h = 0;
   }
 
-  let [d, mo, y] = m.date.split("/");
+let [mo, d, y] = m.date.split("/");
 
   // fix year like 26 → 2026
   if(y.length === 2) y = "20" + y;
@@ -3209,6 +3268,85 @@ function renderMonthlySummary(messages){
 }
 async function generateShareLink(){
 
+  const details =
+    document.getElementById(
+      "detailsSection"
+    );
+
+  // Ensure charts are rendered before snapshotting canvases.
+  // Chart.js draws asynchronously and canvases may be empty/not ready yet.
+  const chartIds = [
+    "userChart",
+    "monthlyChatChart",
+    "timeChart",
+    "replyChart"
+  ];
+
+  async function waitForChartsReady({
+    timeoutMs = 3000,
+    intervalMs = 100
+  } = {}){
+    const start = Date.now();
+
+    // If someone removed/hid canvases, we still try to capture.
+    while(Date.now() - start < timeoutMs){
+      let haveAny = false;
+      let allOk = true;
+
+      for(const id of chartIds){
+        const canvas = document.getElementById(id);
+        if(!canvas) continue;
+        haveAny = true;
+
+        // If Chart.js hasn't drawn yet, toDataURL is either blank or throws.
+        try{
+          const dataUrl = canvas.toDataURL("image/png");
+          // dataUrl size heuristic; a blank canvas usually yields very small payloads.
+          if(!dataUrl || dataUrl.length < 5000){
+            allOk = false;
+          }
+        }catch(e){
+          allOk = false;
+        }
+      }
+
+      if(haveAny && allOk) return true;
+      await new Promise(r=>setTimeout(r, intervalMs));
+    }
+
+    return false;
+  }
+
+
+  const chartsReady = await waitForChartsReady();
+
+  let chartHTML = "";
+
+  for(const id of chartIds){
+
+    const canvas = document.getElementById(id);
+
+    if(canvas){
+      try{
+        // If charts weren't ready, snapshot anyway (best effort)
+        // so we don't drop all images.
+        chartHTML += `
+          <img
+            src="${canvas.toDataURL("image/png")}"
+            style="
+              width:100%;
+              margin-top:20px;
+              border-radius:18px;
+            "
+          >
+        `;
+      }catch(e){
+        console.log(e);
+      }
+    }
+  }
+
+
   const reportData = {
 
     insights:
@@ -3217,26 +3355,34 @@ async function generateShareLink(){
       ).innerHTML,
 
     details:
-      document.getElementById(
-        "detailsSection"
-      ).innerHTML,
-      messages:messages
+      details.innerHTML + chartHTML
+
   };
 
   const res = await fetch(
     "https://chat-analyser-ai-1.onrender.com/share-report",
     {
       method:"POST",
-
       headers:{
         "Content-Type":"application/json"
       },
-
       body:JSON.stringify(reportData)
     }
   );
 
   const data = await res.json();
+
+  console.log(data);
+
+  if(data.shareUrl){
+
+    navigator.clipboard.writeText(
+      data.shareUrl
+    );
+
+    alert("Share link copied!");
+  }
+
 
 console.log(
   "SHARE RESPONSE:",
@@ -3277,7 +3423,8 @@ window.addEventListener(
 
     const data =
       await res.json();
-
+    console.log(data);
+console.log(data.messages);
     document.getElementById(
       "insights"
     ).innerHTML =
@@ -3291,25 +3438,29 @@ window.addEventListener(
     document.getElementById(
       "detailsSection"
     ).style.display = "block";
+     setTimeout(()=>{
 
+  if(data.messages){
+
+    updateCharts(data.messages);
+
+    createMonthlyChart(
+      data.messages
+    );
+
+    createReplyChart(
+      getReplySpeed(
+        data.messages
+      )
+    );
+  }
+
+},300);
     document.getElementById(
       "showInsightsBtn"
     ).innerHTML =
       "⬆ Hide Insights";
-      if(data.messages){
-
-  updateCharts(data.messages);
-
-  createMonthlyChart(
-    data.messages
-  );
-
-  createReplyChart(
-    getReplySpeed(
-      data.messages
-    )
-  );
-}
+   
   }
 );
 /* LOAD SHARED ANALYSIS */
