@@ -189,8 +189,10 @@ function parseInstagram(jsonData) {
 
         const date = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
         const time = `${hour}:${minute} ${modifier}`;
- console.log("RAW:", msg.content);
-console.log("CLEAN:", cleanInstagramText(msg.content));
+
+if (/[^\x00-\x7F]/.test(msg.content)) {
+  console.log("RAW:", msg.content);
+}
         return {
           date,
           time,
