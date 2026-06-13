@@ -3064,6 +3064,8 @@ document.getElementById("fileInput")
   document.getElementById("fileName")
     .innerText = fileName;
 });
+
+
 function createMonthlyChart(messages){
 
   const monthNames = [
@@ -3091,6 +3093,32 @@ function createMonthlyChart(messages){
 
     monthlyCount[month] =
       (monthlyCount[month] || 0) + 1;
+      messages.slice(0,5).forEach(m=>{
+  console.log("RAW:", m.date);
+
+  const [a,b,c] = m.date.split("/");
+
+  console.log({
+    first:a,
+    second:b,
+    third:c
+  });
+});
+const months = {};
+
+messages.forEach(m=>{
+  const t = new Date(getTime(m));
+
+  const month =
+    t.toLocaleString("default",{
+      month:"short"
+    });
+
+  months[month] =
+    (months[month]||0)+1;
+});
+
+console.log(months);
   });
 
   const labels = Object.keys(monthlyCount);
