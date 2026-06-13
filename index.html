@@ -3082,7 +3082,7 @@ function createMonthlyChart(messages){
     const parts = m.date.split("/");
     if(parts.length < 2) return;
 
-    const mo = parseInt(parts[1]);
+    const mo = parseInt(parts[0]);
 
     // 🚨 skip invalid months
     if(isNaN(mo) || mo < 1 || mo > 12) return;
@@ -3098,27 +3098,7 @@ function createMonthlyChart(messages){
 
   const [a,b,c] = m.date.split("/");
 
-  console.log({
-    first:a,
-    second:b,
-    third:c
-  });
-});
-const months = {};
-
-messages.forEach(m=>{
-  const t = new Date(getTime(m));
-
-  const month =
-    t.toLocaleString("default",{
-      month:"short"
-    });
-
-  months[month] =
-    (months[month]||0)+1;
-});
-
-console.log(months);
+ 
   });
 
   const labels = Object.keys(monthlyCount);
