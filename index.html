@@ -803,16 +803,21 @@ words.forEach(w=>{
   }
 });
 
-    const emojis=[
-  ...(m.message || "")
-    .matchAll(/\p{Extended_Pictographic}/gu)
-].map(e=>e[0]);
+    const emojis =
+  (m.message || "")
+    .match(
+      /\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu
+    ) || [];
 
     emojis.forEach(e=>{
       u.emojis[e]=(u.emojis[e]||0)+1;
     });
   });
-
+   console.log(
+  messages.find(m =>
+    /©|😂|❤️|😭|ð|�/.test(m.message)
+  )
+);
   return users;
 }
 
