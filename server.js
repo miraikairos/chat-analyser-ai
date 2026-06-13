@@ -21,7 +21,8 @@ const reportSchema =
 
     insights:String,
 
-    details:String
+    details:String,
+    messages:Array
 
   });
 
@@ -409,7 +410,8 @@ app.post("/share-report", async (req,res)=>{
 
   insights:req.body.insights,
 
-  details:req.body.details
+  details:req.body.details,
+  messages:req.body.messages
 
 });
 
@@ -417,8 +419,8 @@ app.post("/share-report", async (req,res)=>{
 
       success:true,
 
-     shareUrl:
-`https://chat-analyser-ai.netlify.app/?report=${report._id}`
+  shareUrl:
+`https://chat-analyser-ai.vercel.app/?report=${report._id}`
 
     });
 
