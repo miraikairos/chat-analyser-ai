@@ -3082,7 +3082,7 @@ function createMonthlyChart(messages){
     const parts = m.date.split("/");
     if(parts.length < 2) return;
 
-    const mo = parseInt(parts[0]);
+    const mo = parseInt(parts[1]);
 
     // 🚨 skip invalid months
     if(isNaN(mo) || mo < 1 || mo > 12) return;
@@ -3158,7 +3158,7 @@ function renderMonthlySummary(messages){
     const parts = m.date.split("/");
     if(parts.length < 2) return;
 
-    const mo = parseInt(parts[0]) - 1;
+    const mo = parseInt(parts[1]) - 1;
 
     const month = monthNames[mo];
 
