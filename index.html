@@ -1025,6 +1025,10 @@ function getTime(m){
   if(y.length === 2) y = "20" + y;
 
   return new Date(y, mo - 1, d, h, min).getTime();
+  console.log(
+  messages[0].date,
+  new Date(getTime(messages[0]))
+);
 }
 
 function getReplySpeed(messages){
