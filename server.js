@@ -158,20 +158,24 @@ if (parts.length === 3) {
 /* =========================
    INSTAGRAM (JSON export)
 ========================= */
-function cleanInstagramText(text = "") {
+
+function parseInstagram(jsonData) {
+  try {
+    if (!jsonData?.messages) return [];function cleanInstagramText(text = "") {
+
+  if (/ð|â|�/.test(text)) {
+    try {
+      text = Buffer.from(text, "latin1").toString("utf8");
+    } catch {}
+  }
 
   return text
-    .replace(/ð[\s\S]{0,4}/g, "")
-    .replace(/�/g, "")
     .replace(/You sent an attachment\./gi, "")
     .replace(/Reacted .*? to your message/gi, "")
     .replace(/sent an attachment\./gi, "")
     .replace(/https?:\/\/\S+/g, "")
     .trim();
 }
-function parseInstagram(jsonData) {
-  try {
-    if (!jsonData?.messages) return [];
 
     const messages = jsonData.messages
       .map((msg) => {
