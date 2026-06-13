@@ -3093,11 +3093,7 @@ function createMonthlyChart(messages){
 
     monthlyCount[month] =
       (monthlyCount[month] || 0) + 1;
-      messages.slice(0,5).forEach(m=>{
-  console.log("RAW:", m.date);
-
-  const [a,b,c] = m.date.split("/");
-
+   
  
   });
 
@@ -3162,7 +3158,7 @@ function renderMonthlySummary(messages){
     const parts = m.date.split("/");
     if(parts.length < 2) return;
 
-    const mo = parseInt(parts[1]) - 1;
+    const mo = parseInt(parts[0]) - 1;
 
     const month = monthNames[mo];
 
