@@ -189,7 +189,8 @@ function parseInstagram(jsonData) {
 
         const date = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
         const time = `${hour}:${minute} ${modifier}`;
-
+ console.log("RAW:", msg.content);
+console.log("CLEAN:", cleanInstagramText(msg.content));
         return {
           date,
           time,
@@ -197,8 +198,7 @@ function parseInstagram(jsonData) {
 message: cleanInstagramText(msg.content),
           senderType: "unknown",
         };
-        console.log("RAW:", msg.content);
-console.log("CLEAN:", cleanInstagramText(msg.content));
+       
       })
       .filter(Boolean)
 .filter(m => m.message && m.message.length > 0)
